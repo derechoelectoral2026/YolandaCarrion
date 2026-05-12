@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simulacro INE – Vocalía de Capacitación Electoral y Educación Cívica</title>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Segoe UI',sans-serif; background:#f0fff4; color:#222; min-height:100dvh; overflow-x:hidden; }
+
+/* HEADER */
+.header { background:linear-gradient(135deg,#1b5e20,#43a047); color:white; padding:10px 14px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,.2); position:sticky; top:0; z-index:200; }
+.header-logo { font-size:1.35rem; flex-shrink:0; }
+.header-text { flex:1; min-width:0; }
+.header h1 { font-size:.86rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.header p  { font-size:.6rem; opacity:.82; margin-top:1px; }
+.header-right { flex-shrink:0; text-align:right; }
+.timer { font-size:1.45rem; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.5px; line-height:1; }
+.t-lbl { font-size:.55rem; opacity:.65; margin-top:1px; }
+.timer.warning { color:#ffe082; }
+.timer.danger  { color:#ff6b6b; animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.45} }
+.progress-wrap { background:#c8e6c9; height:3px; }
+.progress-bar  { height:3px; background:#fff; transition:width .4s; }
+
+/* MAIN */
+.main { padding:12px 12px 80px; max-width:600px; margin:0 auto; }
+
+/* START */
+.start-screen { background:white; border-radius:14px; padding:22px 16px; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-top:14px; text-align:center; }
+.start-screen h2 { font-size:1.2rem; color:#1b5e20; margin-bottom:10px; line-height:1.3; }
+.info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:15px 0; }
+.info-card { background:#e8f5e9; border-radius:10px; padding:11px 8px; }
+.info-card .num { font-size:1.5rem; font-weight:800; color:#1b5e20; }
+.info-card .lbl { font-size:.72rem; color:#666; margin-top:2px; }
+.topic-section { text-align:left; margin:13px 0; }
+.topic-section-title { font-size:.71rem; font-weight:800; color:#1b5e20; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; padding-left:8px; border-left:3px solid #43a047; }
+.topic-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+.topic-pill { background:#e8f5e9; border-radius:7px; padding:6px 10px; font-size:.75rem; color:#1b5e20; display:flex; justify-content:space-between; gap:6px; }
+.topic-pill .cnt { font-weight:800; flex-shrink:0; }
+
+/* QUESTION CARD */
+.question-card { background:white; border-radius:12px; padding:15px 13px; box-shadow:0 2px 10px rgba(0,0,0,.07); margin-bottom:12px; animation:fadeUp .25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)} }
+.q-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; flex-wrap:wrap; gap:5px; }
+.q-badge { font-size:.66rem; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
+.q-num { color:#aaa; font-size:.75rem; }
+
+/* PASSAGE */
+.passage { background:#f0fff4; border-left:4px solid #43a047; padding:10px 12px; border-radius:0 8px 8px 0; margin-bottom:12px; font-size:.83rem; line-height:1.7; }
+.passage-label { font-size:.64rem; font-weight:700; color:#1b5e20; text-transform:uppercase; margin-bottom:5px; }
+
+/* QUESTION TEXT */
+.question-text { font-size:.9rem; font-weight:600; line-height:1.5; margin-bottom:13px; }
+
+/* OPTIONS */
+.options { display:flex; flex-direction:column; gap:8px; }
+.option { display:flex; align-items:flex-start; gap:10px; padding:13px 12px; border:2px solid #e0e0e0; border-radius:10px; cursor:pointer; transition:border-color .13s,background .13s; font-size:.86rem; line-height:1.45; min-height:50px; }
+.option:active:not(.disabled) { border-color:#43a047; background:#e8f5e933; }
+.option.selected  { border-color:#43a047; background:#e8f5e955; }
+.option.correct   { border-color:#4caf50; background:#e8f5e9; }
+.option.incorrect { border-color:#f44336; background:#ffebee; }
+.option.disabled  { cursor:default; }
+.option-letter { width:26px; height:26px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.75rem; flex-shrink:0; transition:background .13s,color .13s; }
+.option.selected  .option-letter { background:#43a047; color:white; }
+.option.correct   .option-letter { background:#4caf50; color:white; }
+.option.incorrect .option-letter { background:#f44336; color:white; }
+.opt-text { flex:1; }
+.opt-icon { flex-shrink:0; font-size:.9rem; }
+
+/* EXPLANATION */
+.explanation { margin-top:12px; padding:11px 12px; background:#f0fff4; border-radius:9px; border-left:4px solid #43a047; font-size:.81rem; line-height:1.65; display:none; }
+.explanation.show { display:block; }
+.explanation strong { color:#1b5e20; }
+
+/* VER SOLUCIÓN */
+.ver-sol-wrap { text-align:center; margin-bottom:10px; }
+.btn-ver-sol { background:white; border:2px solid #43a047; color:#1b5e20; padding:9px 20px; border-radius:9px; font-weight:700; font-size:.82rem; cursor:pointer; min-height:44px; transition:all .13s; }
+.btn-ver-sol:active { background:#e8f5e9; }
+
+/* BUTTONS */
+.btn { padding:10px 18px; border-radius:10px; border:none; font-size:.85rem; font-weight:700; cursor:pointer; transition:all .15s; min-height:44px; }
+.btn:active { transform:scale(.96); }
+.btn-primary   { background:linear-gradient(135deg,#1b5e20,#43a047); color:white; }
+.btn-primary:active   { opacity:.88; }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+.btn-secondary { background:#f0f0f0; color:#555; }
+.btn-secondary:active { background:#e0e0e0; }
+.btn-lg { padding:13px 26px; font-size:.92rem; border-radius:12px; }
+.btn-sm { padding:9px 15px; font-size:.8rem; min-height:40px; }
+
+/* BOTTOM NAV */
+.nav-bar { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid #e0e0e0; padding:8px 14px; padding-bottom:max(8px,env(safe-area-inset-bottom)); display:flex; justify-content:space-between; align-items:center; gap:8px; box-shadow:0 -2px 10px rgba(0,0,0,.07); z-index:200; }
+.nav-info { font-size:.77rem; color:#888; line-height:1.4; }
+.nav-info span { color:#1b5e20; font-weight:700; }
+.nav-btns { display:flex; gap:7px; flex-shrink:0; }
+
+/* RESULTS */
+.results-screen { background:white; border-radius:14px; padding:24px 16px; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-top:14px; text-align:center; }
+.score-circle { width:108px; height:108px; border-radius:50%; margin:0 auto 16px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.85rem; font-weight:900; color:white; }
+.score-sub { font-size:.68rem; font-weight:500; opacity:.85; }
+.score-good { background:linear-gradient(135deg,#43a047,#66bb6a); }
+.score-mid  { background:linear-gradient(135deg,#f57c00,#ffa726); }
+.score-low  { background:linear-gradient(135deg,#c62828,#ef5350); }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0; }
+.stat-card { background:#f9f9f9; border-radius:10px; padding:11px 8px; }
+.stat-card .n { font-size:1.35rem; font-weight:800; }
+.stat-card .l { font-size:.7rem; color:#888; margin-top:2px; }
+.stat-correct .n { color:#43a047; }
+.stat-wrong .n   { color:#e53935; }
+.stat-skip .n    { color:#888; }
+.area-row { display:flex; align-items:center; gap:9px; margin-bottom:8px; font-size:.8rem; }
+.area-name { flex:1; color:#444; }
+.area-bar-wrap { flex:2; background:#eee; border-radius:4px; height:6px; }
+.area-bar { height:6px; border-radius:4px; }
+.area-pct { width:32px; text-align:right; font-weight:700; font-size:.77rem; }
+.weak-banner { background:linear-gradient(135deg,#1b5e20,#43a047); color:white; border-radius:11px; padding:12px 14px; margin:12px 0; text-align:left; }
+.weak-banner h4 { margin-bottom:4px; font-size:.9rem; }
+.weak-banner p  { font-size:.78rem; opacity:.9; margin-bottom:6px; }
+.weak-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.weak-tag  { background:rgba(255,255,255,.25); border-radius:5px; padding:3px 8px; font-size:.74rem; font-weight:700; }
+.hidden { display:none !important; }
+@media(max-width:360px){ .topic-grid{grid-template-columns:1fr} .info-grid{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">📚</div>
+  <div class="header-text">
+    <h1>Vocalía de Capacitación Electoral y Ed. Cívica</h1>
+    <p>Conocimientos técnicos del cargo · Diagnóstico · 🔀 Aleatorio</p>
+  </div>
+  <div class="header-right">
+    <div class="timer" id="timer">50:00</div>
+    <div class="t-lbl">tiempo restante</div>
+  </div>
+</div>
+<div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+<div class="main">
+  <!-- START SCREEN -->
+  <div class="start-screen" id="startScreen">
+    <h2>📚 Vocalía de Capacitación Electoral y Educación Cívica</h2>
+    <p style="background:#e8f5e9;border-radius:10px;padding:10px;color:#1b5e20;font-weight:600;margin-bottom:13px;font-size:.81rem">
+      🎯 Evalúa los conocimientos técnicos específicos de la VCEyEC. <strong>🔀 Preguntas en orden aleatorio cada vez</strong>
+    </p>
+    <div class="info-grid">
+      <div class="info-card"><div class="num">40</div><div class="lbl">Preguntas</div></div>
+      <div class="info-card"><div class="num">50</div><div class="lbl">Minutos</div></div>
+      <div class="info-card"><div class="num">5</div><div class="lbl">Áreas</div></div>
+    </div>
+    <div class="topic-section">
+      <div class="topic-section-title">🏢 1. Marco normativo e institucional (6 preguntas)</div>
+      <div class="topic-grid">
+        <div class="topic-pill"><span>1.1 Fundamento legal de la VCEyEC</span><span class="cnt">2</span></div>
+        <div class="topic-pill"><span>1.2 Atribuciones y funciones</span><span class="cnt">2</span></div>
+        <div class="topic-pill"><span>1.3 Estructura interna</span><span class="cnt">2</span></div>
+      </div>
+      <div class="topic-section-title">🎓 2. Capacitación electoral (14 preguntas)</div>
+      <div class="topic-grid">
+        <div class="topic-pill"><span>2.1 Selección de funcionarios de casilla</span><span class="cnt">4</span></div>
+        <div class="topic-pill"><span>2.2 Proceso de capacitación</span><span class="cnt">4</span></div>
+        <div class="topic-pill"><span>2.3 Materiales y técnicas</span><span class="cnt">3</span></div>
+        <div class="topic-pill"><span>2.4 Supervisión y control</span><span class="cnt">3</span></div>
+      </div>
+      <div class="topic-section-title">🗳️ 3. Jornada electoral — funciones del vocal (10 preguntas)</div>
+      <div class="topic-grid">
+        <div class="topic-pill"><span>3.1 Instalación de casillas</span><span class="cnt">3</span></div>
+        <div class="topic-pill"><span>3.2 Sustitución de funcionarios</span><span class="cnt">3</span></div>
+        <div class="topic-pill"><span>3.3 Incidentes y contingencias</span><span class="cnt">4</span></div>
+      </div>
+      <div class="topic-section-title">📖 4. Educación cívica y participación ciudadana (6 preguntas)</div>
+      <div class="topic-grid">
+        <div class="topic-pill"><span>4.1 Programas de educación cívica</span><span class="cnt">3</span></div>
+        <div class="topic-pill"><span>4.2 Cultura democrática</span><span class="cnt">3</span></div>
+      </div>
+      <div class="topic-section-title">📋 5. Normativa aplicable al cargo (4 preguntas)</div>
+      <div class="topic-grid">
+        <div class="topic-pill"><span>5.1 LGIPE y Reglamento de Elecciones</span><span class="cnt">2</span></div>
+        <div class="topic-pill"><span>5.2 Estatuto del SPEN</span><span class="cnt">2</span></div>
+      </div>
+    </div>
+    <p style="font-size:.73rem;color:#888;margin-bottom:14px">📚 Fuentes: LGIPE (2024) · Reglamento de Elecciones INE (2025) · Estatuto SPEN (2024) · CPEUM (2025)</p>
+    <button class="btn btn-primary btn-lg" style="width:100%" onclick="startExam()">Comenzar diagnóstico →</button>
+  </div>
+
+  <div id="examScreen" class="hidden"></div>
+  <div id="resultsScreen" class="hidden"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="nav-bar hidden" id="navBar">
+  <div class="nav-info">
+    Preg. <span id="navCurrent">1</span> de <span id="navTotal">40</span>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-secondary btn-sm" id="btnPrev" onclick="prevQ()">← Ant.</button>
+    <button class="btn btn-primary  btn-sm" id="btnNext" onclick="nextQ()">Sig. →</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   BANCO DE PREGUNTAS
+   Vocalía de Capacitación Electoral y Educación Cívica (VCEyEC)
+   Fuentes: LGIPE (2024) · Reglamento de Elecciones INE (2025)
+            Estatuto SPEN (2024) · CPEUM (2025)
+═══════════════════════════════════════════════════════════════ */
+const Q = [
+
+  /* ══════════════════════════════════
+     1.1  FUNDAMENTO LEGAL DE LA VCEyEC  (2)
+  ══════════════════════════════════ */
+  { sa:"1.1", sal:"Fundamento legal de la VCEyEC", area:"Marco normativo e institucional",
+    p:null, pt:null,
+    q:"¿En qué ordenamiento legal se establecen las atribuciones de la Vocalía de Capacitación Electoral y Educación Cívica de las Juntas Distritales Ejecutivas?",
+    o:["Exclusivamente en el Estatuto del SPEN (2024)",
+       "En la Ley General de Instituciones y Procedimientos Electorales (LGIPE) y en el Reglamento de Elecciones del INE",
+       "Solo en el Acuerdo del Consejo General del INE que aprueba el organigrama anual"],
+    c:1,
+    ex:"Las atribuciones de la Vocalía de Capacitación Electoral y Educación Cívica (VCEyEC) se encuentran establecidas principalmente en la LGIPE (Arts. 76, 79 y concordantes) y en el Reglamento de Elecciones del INE, que desarrollan las funciones de capacitación a funcionarios de casilla y educación cívica." },
+
+  { sa:"1.1", sal:"Fundamento legal de la VCEyEC", area:"Marco normativo e institucional",
+    p:"El Art. 41 de la CPEUM establece que el INE tendrá a su cargo, entre otras actividades, la capacitación electoral y la educación cívica. El Art. 32 de la LGIPE concreta estas atribuciones en los órganos desconcentrados.", pt:"Fundamento constitucional",
+    q:"¿Cuál es el fundamento constitucional que obliga al INE a desarrollar programas de capacitación electoral y educación cívica?",
+    o:["El Art. 3 CPEUM sobre el derecho a la educación",
+       "El Art. 41 CPEUM, que establece expresamente entre las atribuciones del INE la capacitación electoral y la educación cívica como funciones estatales",
+       "El Art. 6 CPEUM sobre libertad de expresión"],
+    c:1,
+    ex:"El Art. 41, Base V, apartado A, fracción I de la CPEUM establece que el INE tendrá a su cargo 'la capacitación electoral y la educación cívica', siendo estas funciones de carácter estatal que deben ejercerse de manera permanente y no solo durante los procesos electorales." },
+
+  /* ══════════════════════════════════
+     1.2  ATRIBUCIONES Y FUNCIONES  (2)
+  ══════════════════════════════════ */
+  { sa:"1.2", sal:"Atribuciones y funciones", area:"Marco normativo e institucional",
+    p:null, pt:null,
+    q:"¿Cuál es la principal atribución del Vocal de Capacitación Electoral y Educación Cívica en la Junta Distrital Ejecutiva?",
+    o:["Presidir el Consejo Distrital y resolver impugnaciones",
+       "Coordinar la selección, capacitación e integración de las Mesas Directivas de Casilla, así como desarrollar programas de educación cívica en el distrito",
+       "Administrar los recursos financieros de la Junta Distrital"],
+    c:1,
+    ex:"El Vocal de Capacitación Electoral y Educación Cívica tiene como principal atribución coordinar todo el proceso de selección e insaculación de ciudadanos, su capacitación como funcionarios de casilla, la integración de las Mesas Directivas de Casilla, y adicionalmente implementar programas permanentes de educación cívica en su distrito." },
+
+  { sa:"1.2", sal:"Atribuciones y funciones", area:"Marco normativo e institucional",
+    p:null, pt:null,
+    q:"¿Las funciones de educación cívica de la VCEyEC se realizan únicamente durante el proceso electoral federal?",
+    o:["Sí, la educación cívica es solo una actividad del proceso electoral",
+       "No, la educación cívica es una función permanente que se desarrolla tanto en periodos electorales como fuera de ellos",
+       "Solo se realizan cuando el Consejo General lo instruye expresamente"],
+    c:1,
+    ex:"La educación cívica es una función permanente del INE y de sus órganos desconcentrados. La VCEyEC desarrolla programas de cultura democrática, participación ciudadana y valores cívicos a lo largo de todo el año, con independencia de si hay o no proceso electoral en curso." },
+
+  /* ══════════════════════════════════
+     1.3  ESTRUCTURA INTERNA  (2)
+  ══════════════════════════════════ */
+  { sa:"1.3", sal:"Estructura interna", area:"Marco normativo e institucional",
+    p:null, pt:null,
+    q:"¿En qué órgano colegiado del INE a nivel distrital participa el Vocal de Capacitación Electoral y Educación Cívica?",
+    o:["Solo en la Junta Distrital Ejecutiva como órgano permanente",
+       "En la Junta Distrital Ejecutiva (como integrante permanente) y en el Consejo Distrital como secretario o vocal durante el proceso electoral",
+       "Únicamente en el Consejo Distrital como presidente"],
+    c:1,
+    ex:"El Vocal de Capacitación Electoral y Educación Cívica integra la Junta Distrital Ejecutiva de manera permanente, donde es responsable de su área. Durante el proceso electoral también participa en el Consejo Distrital, órgano temporal colegiado con funciones directivas y normativas en el distrito." },
+
+  { sa:"1.3", sal:"Estructura interna", area:"Marco normativo e institucional",
+    p:null, pt:null,
+    q:"¿Cuántas Vocalías de Capacitación Electoral y Educación Cívica existen a nivel nacional en los órganos distritales?",
+    o:["200, una por cada distrito plurinominal",
+       "300, una por cada Junta Distrital Ejecutiva, correspondiente a los 300 distritos electorales federales uninominales",
+       "32, una por cada entidad federativa"],
+    c:1,
+    ex:"Existen 300 Vocalías de Capacitación Electoral y Educación Cívica a nivel distrital, una en cada Junta Distrital Ejecutiva, que corresponden a los 300 distritos electorales federales uninominales en que se divide el territorio nacional conforme al Art. 53 de la CPEUM." },
+
+  /* ══════════════════════════════════
+     2.1  SELECCIÓN DE FUNCIONARIOS DE CASILLA  (4)
+  ══════════════════════════════════ */
+  { sa:"2.1", sal:"Selección de funcionarios de casilla", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Cuál es el mecanismo legal que utiliza el INE para seleccionar a los funcionarios de Mesa Directiva de Casilla?",
+    o:["Designación directa por el Vocal Ejecutivo entre ciudadanos conocidos en el distrito",
+       "Insaculación de ciudadanos del listado nominal de electores del distrito en dos etapas: primera y segunda insaculación",
+       "Convocatoria pública voluntaria sin ningún proceso de selección aleatoria"],
+    c:1,
+    ex:"El INE utiliza el proceso de insaculación, que consiste en la selección aleatoria de ciudadanos del listado nominal de electores del distrito. Se realizan dos etapas: en la primera insaculación se selecciona al universo de ciudadanos a capacitar; en la segunda se designa formalmente a quienes integrarán las Mesas Directivas de Casilla." },
+
+  { sa:"2.1", sal:"Selección de funcionarios de casilla", area:"Capacitación electoral",
+    p:"En el proceso de insaculación, el INE selecciona ciudadanos del listado nominal para capacitarlos como funcionarios de casilla. Sin embargo, no todos los ciudadanos insaculados resultan aptos o disponibles.", pt:"Proceso de insaculación",
+    q:"¿Qué sucede cuando un ciudadano insaculado no puede o no quiere fungir como funcionario de casilla?",
+    o:["Se le impone una multa por no acudir a la capacitación",
+       "Es sustituido por otro ciudadano del listado de reserva generado en el mismo proceso de insaculación, previo agotamiento del procedimiento de localización",
+       "Automáticamente se designa al siguiente en el padrón electoral por orden alfabético"],
+    c:1,
+    ex:"Cuando un ciudadano insaculado no puede ser localizado, no cumple los requisitos o decide no participar, se recurre a la lista de ciudadanos de reserva generada en el propio proceso de insaculación. La VCEyEC es responsable de agotar el proceso de localización antes de acudir a los sustitutos." },
+
+  { sa:"2.1", sal:"Selección de funcionarios de casilla", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Cuántos funcionarios integran una Mesa Directiva de Casilla ordinaria?",
+    o:["3 funcionarios: Presidente, Secretario y un Escrutador",
+       "9 funcionarios: Una Presidenta, o Presidente, Secretaria o Secretario, dos Escrutadores y tres suplentes generales",
+       "6 funcionarios: Presidente, Secretario, dos Escrutadores y un suplente general"],
+    c:1,
+    ex:"Conforme al Art. 82 de la LGIPE, la Mesa Directiva de Casilla ordinaria se integra por 9 ciudadanos: 4 propietarios (Presidente, Secretario y dos Escrutadores) y 3 suplentes generales. En total, son 9 ciudadanos capacitados para asegurar la instalación y funcionamiento de la casilla." },
+
+  { sa:"2.1", sal:"Selección de funcionarios de casilla", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Cuál es el cargo de mayor responsabilidad dentro de la Mesa Directiva de Casilla y quién lo suple en caso de ausencia?",
+    o:["El Secretario; lo suple el Primer Escrutador",
+       "El Presidente; en caso de ausencia asume el cargo el Secretario, y si este también falta, el Primer Escrutador",
+       "El Primer Escrutador; lo suple directamente el Vocal de Organización Electoral"],
+    c:1,
+    ex:"El Presidente de la Mesa Directiva de Casilla es el funcionario de mayor responsabilidad: preside la votación, vela por el orden y tiene voto de calidad en caso de empate. Ante su ausencia, asume el Secretario; si ambos faltan, toma el cargo el Primer Escrutador. Esta cadena de suplencia está prevista en el Reglamento de Elecciones." },
+
+  /* ══════════════════════════════════
+     2.2  PROCESO DE CAPACITACIÓN  (4)
+  ══════════════════════════════════ */
+  { sa:"2.2", sal:"Proceso de capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Cuántas sesiones de capacitación presencial debe recibir como mínimo un ciudadano designado como funcionario de casilla?",
+    o:["Una sola sesión el día anterior a la jornada",
+       "Al menos tres sesiones de capacitación: dos previas a la segunda insaculación y una de repaso cercana a la jornada electoral",
+       "Una sesión únicamente en modalidad en línea sin necesidad de asistencia presencial"],
+    c:1,
+    ex:"Conforme al Reglamento de Elecciones del INE, los ciudadanos designados como funcionarios de casilla deben recibir al menos tres sesiones de capacitación: dos sesiones formativas realizadas antes de la segunda insaculación y una sesión de repaso o reforzamiento que se realiza en los días previos a la jornada electoral." },
+
+  { sa:"2.2", sal:"Proceso de capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Qué son los Capacitadores-Asistentes Electorales (CAE) y cuál es su función principal?",
+    o:["Son funcionarios de carrera permanentes del INE encargados de administrar los recursos de la Junta",
+       "Son ciudadanos contratados temporalmente por el INE para visitar domicilios, localizar a los ciudadanos insaculados y capacitarlos en el llenado de documentación electoral",
+       "Son observadores electorales acreditados para supervisar la capacitación"],
+    c:1,
+    ex:"Los Capacitadores-Asistentes Electorales (CAE) son contratados temporalmente por la VCEyEC para realizar la tarea de campo: visitar los domicilios de los ciudadanos insaculados, verificar su localización, informarles sobre su designación y capacitarlos mediante las sesiones correspondientes sobre el manejo de documentos y procedimientos de la jornada electoral." },
+
+  { sa:"2.2", sal:"Proceso de capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Qué documento acredita formalmente que un ciudadano ha sido capacitado y es apto para fungir como funcionario de casilla?",
+    o:["El acta de nacimiento y la credencial para votar vigente",
+       "El Acta de Integración de Mesa Directiva de Casilla, firmada por el ciudadano y elaborada por el CAE tras verificar la capacitación",
+       "Un certificado de capacitación expedido por la Dirección Ejecutiva de Capacitación Electoral a nivel central"],
+    c:1,
+    ex:"El Acta de Integración de Mesa Directiva de Casilla es el documento oficial que formaliza la designación y capacitación del ciudadano. En ella se registran los datos del funcionario, el cargo que desempeñará y se asienta su conformidad y aptitud. Es elaborada por el CAE una vez concluida la capacitación correspondiente." },
+
+  { sa:"2.2", sal:"Proceso de capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Qué pasa si el día de la jornada electoral un funcionario designado no se presenta a instalar la casilla a la hora señalada?",
+    o:["La casilla no se instala y se cancela la votación en esa sección",
+       "El CAE o el Supervisor Electoral que tenga bajo su responsabilidad esa casilla activa el procedimiento de sustitución: ubica al suplente y, de no haber, designa a ciudadanos presentes en la fila que reúnan los requisitos",
+       "Los representantes de partidos presentes pueden instalar la casilla sin necesidad de funcionarios del INE"],
+    c:1,
+    ex:"Ante la ausencia de un funcionario propietario, el CAE o Supervisor Electoral debe ubicar y trasladar al suplente. Si el suplente tampoco está disponible y la casilla no puede integrarse con los designados, se procede a designar de entre los ciudadanos que acudan a votar a quienes reúnan los requisitos, en el orden establecido: primero el Presidente, luego el Secretario, etc." },
+
+  /* ══════════════════════════════════
+     2.3  MATERIALES Y TÉCNICAS  (3)
+  ══════════════════════════════════ */
+  { sa:"2.3", sal:"Materiales y técnicas didácticas", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Cuál es el principal material que utiliza el INE para capacitar a los funcionarios de casilla sobre los procedimientos de la jornada electoral?",
+    o:["El Diario Oficial de la Federación con la convocatoria electoral",
+       "El Manual del Funcionario de Casilla, elaborado y aprobado por el INE para cada proceso electoral",
+       "La LGIPE completa en su versión impresa"],
+    c:1,
+    ex:"El Manual del Funcionario de Casilla es el documento central de capacitación. Es elaborado y aprobado por el Consejo General del INE para cada proceso electoral y contiene, de forma visual y didáctica, los procedimientos de instalación, votación, escrutinio, cómputo y clausura de la casilla, adaptando la normativa a un lenguaje accesible para el ciudadano ordinario." },
+
+  { sa:"2.3", sal:"Materiales y técnicas didácticas", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Por qué es importante que la capacitación a funcionarios de casilla se realice de forma práctica y no solo mediante lectura de documentos?",
+    o:["Porque la LGIPE obliga a usar dinámicas de teatro como única técnica válida",
+       "Porque los ciudadanos insaculados provienen de distintos niveles educativos y la práctica simulada garantiza que comprendan y memoricen los procedimientos para ejecutarlos correctamente el día de la jornada",
+       "Porque es más rápido y reduce los costos de impresión de manuales"],
+    c:1,
+    ex:"La diversidad educativa y socioeconómica de los ciudadanos insaculados exige que la capacitación use técnicas prácticas: simulacros de instalación, llenado de actas, manejo de boletas y urnas. La práctica garantiza que el ciudadano asimile los procedimientos y pueda aplicarlos correctamente bajo la presión y el dinamismo de la jornada electoral real." },
+
+  { sa:"2.3", sal:"Materiales y técnicas didácticas", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Qué es el Kit Electoral y cuál es su relevancia para la capacitación?",
+    o:["Es el conjunto de materiales de propaganda que los partidos entregan a sus representantes",
+       "Es el conjunto de materiales electorales reales (urna, mamparas, boletas, actas, sello) que el CAE lleva a las sesiones de capacitación para que los ciudadanos practiquen con los documentos y objetos que usarán el día de la jornada",
+       "Es un software de simulación electoral disponible en la página del INE"],
+    c:1,
+    ex:"El Kit Electoral es el conjunto de materiales que el CAE porta durante las sesiones de capacitación domiciliaria y grupal. Incluye réplicas o materiales reales de: boletas, actas de la jornada, urna, mampara, sello y demás documentación. Al practicar con los materiales reales, el funcionario de casilla reduce errores el día de la jornada." },
+
+  /* ══════════════════════════════════
+     2.4  SUPERVISIÓN Y CONTROL  (3)
+  ══════════════════════════════════ */
+  { sa:"2.4", sal:"Supervisión y control de la capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Quién supervisa el trabajo de los Capacitadores-Asistentes Electorales (CAE) en el campo?",
+    o:["El Consejero Presidente del Consejo Distrital directamente",
+       "Los Supervisores Electorales, quienes a su vez reportan al Vocal de Capacitación Electoral y Educación Cívica de la Junta Distrital",
+       "Los representantes de los partidos políticos acreditados ante el Consejo Distrital"],
+    c:1,
+    ex:"La cadena de supervisión es: el Vocal de Capacitación Electoral y Educación Cívica coordina el proceso desde la Junta Distrital. Los Supervisores Electorales (también contratados temporalmente) supervisan en campo el trabajo de los CAE, verifican el avance de visitas domiciliarias y la calidad de las capacitaciones, y reportan al Vocal." },
+
+  { sa:"2.4", sal:"Supervisión y control de la capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Qué sistema informático utiliza el INE para dar seguimiento al avance de la capacitación y localización de funcionarios de casilla?",
+    o:["El Sistema de Información de la Jornada Electoral (SIJE), exclusivo para el día de la elección",
+       "El Sistema de Capacitación Electoral y Educación Cívica (SICEyEC) o el sistema de gestión de capacitación que el INE determine para cada proceso, donde los CAE registran sus visitas y el estatus de cada ciudadano",
+       "Un registro en hojas de cálculo enviadas por correo electrónico a las oficinas centrales"],
+    c:1,
+    ex:"El INE dispone de sistemas informáticos de gestión de capacitación para cada proceso electoral, en los que los CAE registran diariamente el resultado de cada visita domiciliaria: si localizaron al ciudadano, si asistió a la capacitación, si firmó el acta, etc. Esto permite al Vocal y a los Supervisores tener un control en tiempo real del avance y detectar brechas a tiempo." },
+
+  { sa:"2.4", sal:"Supervisión y control de la capacitación", area:"Capacitación electoral",
+    p:null, pt:null,
+    q:"¿Cuándo se considera que un ciudadano insaculado está 'no localizado' y qué consecuencia tiene esa situación?",
+    o:["Cuando no abre la puerta en una sola visita del CAE; se le sustituye inmediatamente",
+       "Cuando el CAE ha agotado el número de visitas establecidas en días y horarios distintos sin lograr contacto; solo entonces se procede a sustituirlo por un ciudadano de la lista de reserva",
+       "Cuando el ciudadano no tiene teléfono y no puede ser contactado por llamada"],
+    c:1,
+    ex:"El Reglamento de Elecciones establece que el CAE debe realizar múltiples intentos de localización en días y horarios distintos (mañana, tarde y noche) antes de declarar a un ciudadano como 'no localizado'. Solo tras agotar ese procedimiento se procede a la sustitución con un ciudadano de la lista de reserva, garantizando así que se agoten las opciones antes de relevar a alguien." },
+
+  /* ══════════════════════════════════
+     3.1  INSTALACIÓN DE CASILLAS  (3)
+  ══════════════════════════════════ */
+  { sa:"3.1", sal:"Instalación de casillas", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿A qué hora deben instalarse las casillas electorales el día de la jornada y cuál es la consecuencia de no hacerlo?",
+    o:["A las 8:00 horas; si no se instalan a esa hora, la votación puede iniciar hasta las 9:00",
+       "A las 8:00 horas; si a las 8:30 horas no ha sido posible instalar la casilla con los funcionarios designados, se procede a integrarla con ciudadanos presentes en la fila que cumplan los requisitos",
+       "A las 7:00 horas; si no se instalan se cancela definitivamente la votación en esa sección"],
+    c:1,
+    ex:"Las casillas deben instalarse a las 8:00 horas. Si a las 8:30 horas no se ha podido integrar la Mesa Directiva con los funcionarios designados (por inasistencia de propietarios y suplentes), el CAE o Supervisor Electoral puede designar a ciudadanos presentes que reúnan los requisitos para integrar la mesa y garantizar el ejercicio del voto." },
+
+  { sa:"3.1", sal:"Instalación de casillas", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Qué función cumple el Vocal de Capacitación Electoral y Educación Cívica durante la jornada electoral?",
+    o:["Se retira de sus funciones porque la jornada es responsabilidad exclusiva del Vocal de Organización Electoral",
+       "Coordina a los CAE y Supervisores para garantizar la instalación de todas las casillas, resuelve contingencias de integración de mesas y mantiene comunicación con la Junta Distrital durante todo el día de la jornada",
+       "Solo vota y no tiene obligaciones específicas el día de la elección"],
+    c:1,
+    ex:"Durante la jornada electoral el Vocal de Capacitación sigue siendo responsable de los CAE y Supervisores que están en campo. Monitorea que todas las casillas se instalen, atiende las contingencias de integración (funcionarios ausentes), coordina las sustituciones necesarias y reporta el avance a la Junta Distrital en tiempo real." },
+
+  { sa:"3.1", sal:"Instalación de casillas", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Qué documento deben firmar los funcionarios de casilla al momento de la instalación para dejar constancia de la apertura?",
+    o:["Una carta de compromiso ciudadano ante notario público",
+       "El Acta de Instalación de la Casilla, que forma parte del Expediente de Casilla y es firmada por todos los funcionarios y representantes de partido presentes",
+       "La cédula de capacitación que les entregó el CAE durante el entrenamiento"],
+    c:1,
+    ex:"El Acta de Instalación de la Casilla es el primer documento que se llena el día de la jornada. En ella se registra la hora de instalación, los nombres de los funcionarios que integran la mesa y las firmas de propietarios y representantes de partidos acreditados. Forma parte del expediente de casilla y es requisito indispensable para iniciar la votación." },
+
+  /* ══════════════════════════════════
+     3.2  SUSTITUCIÓN DE FUNCIONARIOS  (3)
+  ══════════════════════════════════ */
+  { sa:"3.2", sal:"Sustitución de funcionarios de casilla", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Quién puede designar a un ciudadano como sustituto de un funcionario de casilla ausente una vez iniciada la votación?",
+    o:["Cualquier representante de partido con mayoría de votos entre los presentes",
+       "El propio Presidente de la Mesa Directiva de Casilla, con el conocimiento del CAE o Supervisor Electoral que tenga bajo su responsabilidad esa casilla",
+       "Únicamente el Vocal Ejecutivo de la Junta Distrital mediante oficio firmado"],
+    c:1,
+    ex:"Una vez iniciada la votación, si un funcionario debe ausentarse temporalmente o definitivamente, el Presidente de la Mesa puede designar a un ciudadano de los presentes como sustituto. Esta acción debe hacerse del conocimiento del CAE o Supervisor Electoral responsable, quien lo reporta a la Junta Distrital para el control del expediente." },
+
+  { sa:"3.2", sal:"Sustitución de funcionarios de casilla", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Qué requisitos debe reunir un ciudadano para poder ser designado como sustituto de un funcionario de casilla el día de la jornada?",
+    o:["Solo necesita presentar su credencial para votar vigente, sin importar si aparece en la lista nominal de esa sección",
+       "Debe estar en la lista nominal de electores de la sección, no ser representante de partido o candidato, saber leer y escribir, y no haber sido sancionado por infracciones electorales",
+       "Puede ser cualquier ciudadano mayor de edad aunque sea representante de partido, siempre que preste juramento ante los presentes"],
+    c:1,
+    ex:"Para ser designado como sustituto el día de la jornada, el ciudadano debe: (1) estar inscrito en la lista nominal de electores de la sección donde se ubica la casilla, (2) saber leer y escribir, (3) no desempeñar cargo de dirigente de partido o candidato, y (4) no haber incurrido en causales de inelegibilidad. Estos requisitos son los mismos que la ley exige para los funcionarios titulares." },
+
+  { sa:"3.2", sal:"Sustitución de funcionarios de casilla", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Cómo debe registrarse la sustitución de un funcionario de casilla en la documentación electoral?",
+    o:["No se registra; la sustitución es un acto informal que no queda documentado",
+       "Se asienta en el Acta de la Jornada Electoral indicando el nombre del sustituto, el cargo que cubre, el motivo de la sustitución y la hora en que ocurrió",
+       "Se elabora un acta separada que solo firmará el Supervisor Electoral, sin necesidad de que la firme el sustituto"],
+    c:1,
+    ex:"Toda sustitución que ocurra durante la jornada debe quedar registrada en el Acta de la Jornada Electoral. Se debe anotar: nombre del funcionario sustituido, nombre del ciudadano que toma el cargo, el cargo en cuestión, la razón de la sustitución y la hora exacta. Esta documentación es fundamental para la validez de los actos realizados después del cambio y para eventuales impugnaciones." },
+
+  /* ══════════════════════════════════
+     3.3  INCIDENTES Y CONTINGENCIAS  (4)
+  ══════════════════════════════════ */
+  { sa:"3.3", sal:"Incidentes y contingencias en la jornada", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Qué debe hacer el Presidente de Casilla si se produce un incidente de alteración del orden durante la votación?",
+    o:["Suspender la votación y cerrar la casilla de inmediato",
+       "Solicitar el auxilio de la fuerza pública para restablecer el orden, y si no es posible garantizar condiciones de seguridad, suspender temporalmente la votación asentando el incidente en el acta correspondiente",
+       "Continuar la votación ignorando el incidente para no interrumpir el ejercicio del derecho al voto"],
+    c:1,
+    ex:"El Presidente de la Mesa puede solicitar el apoyo de la fuerza pública para restablecer el orden. Si el incidente persiste y no es posible garantizar condiciones de seguridad, puede suspender temporalmente la votación, lo que debe asentarse en el Acta de Incidentes con la descripción del hecho, las personas involucradas, la hora y las medidas adoptadas. El CAE o Supervisor debe reportarlo de inmediato a la Junta Distrital." },
+
+  { sa:"3.3", sal:"Incidentes y contingencias en la jornada", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Qué sucede si la casilla no puede instalarse en el domicilio aprobado por el Consejo Distrital?",
+    o:["Se cancela la votación en esa sección sin posibilidad de cambio",
+       "Los funcionarios de casilla, con conocimiento del Supervisor Electoral, pueden instalarla en el lugar más cercano que reúna las condiciones de accesibilidad y visibilidad, asentando la causa del cambio en el acta",
+       "Los representantes de partidos pueden escoger libremente el nuevo domicilio sin notificar al INE"],
+    c:1,
+    ex:"Si el domicilio aprobado no está disponible el día de la jornada (por cierre del local, accidente u otra causa), los funcionarios de casilla —con conocimiento del Supervisor Electoral— instalarán la casilla en el lugar que más se acerque al domicilio aprobado, garantizando accesibilidad y visibilidad. El cambio debe quedar documentado en el Acta de Incidentes y reportarse a la Junta Distrital." },
+
+  { sa:"3.3", sal:"Incidentes y contingencias en la jornada", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Qué debe hacer la Mesa Directiva de Casilla si se agotan las boletas antes del cierre de la votación?",
+    o:["Cerrar la casilla de inmediato y levantar el acta de cierre",
+       "Comunicar la situación al Supervisor Electoral o CAE para que la reporte a la Junta Distrital, la cual determinará el procedimiento a seguir conforme a la normativa; los electores en fila tienen derecho a votar",
+       "Fotocopiar las boletas restantes para abastecer la casilla"],
+    c:1,
+    ex:"El agotamiento de boletas es una contingencia grave. Los funcionarios deben reportarlo de inmediato al Supervisor Electoral, quien lo escala a la Junta Distrital. Los electores que estén en fila antes del cierre mantienen su derecho a votar. La Junta determinará si procede un reabastecimiento de emergencia o si se aplica otro protocolo, según lo establecido en el Reglamento de Elecciones." },
+
+  { sa:"3.3", sal:"Incidentes y contingencias en la jornada", area:"Jornada electoral — funciones del vocal",
+    p:null, pt:null,
+    q:"¿Cuándo se cierra la votación en una casilla y qué excepción existe respecto al horario de cierre?",
+    o:["Siempre a las 18:00 horas exactas, sin excepción alguna",
+       "A las 18:00 horas; si a esa hora aún hay ciudadanos en fila esperando votar, la votación continúa hasta que el último elector en fila haya emitido su sufragio",
+       "A las 20:00 horas en todos los casos para garantizar mayor participación"],
+    c:1,
+    ex:"El cierre de votación es a las 18:00 horas. Sin embargo, si a esa hora hay ciudadanos en fila esperando votar, la Mesa Directiva debe mantener la casilla abierta hasta que el último de ellos emita su sufragio. Solo entonces se puede iniciar el escrutinio y cómputo. Esta excepción está prevista en el Reglamento de Elecciones para proteger el derecho al voto de quienes llegaron a tiempo." },
+
+  /* ══════════════════════════════════
+     4.1  PROGRAMAS DE EDUCACIÓN CÍVICA  (3)
+  ══════════════════════════════════ */
+  { sa:"4.1", sal:"Programas de educación cívica", area:"Educación cívica y participación ciudadana",
+    p:null, pt:null,
+    q:"¿Cuál es la diferencia entre la capacitación electoral y la educación cívica como funciones de la VCEyEC?",
+    o:["Son lo mismo: ambas consisten en enseñar a votar correctamente el día de la jornada",
+       "La capacitación electoral es específica y temporal (forma funcionarios de casilla para el proceso electoral), mientras que la educación cívica es permanente y busca fomentar valores democráticos, participación ciudadana y cultura electoral en toda la población",
+       "La educación cívica es responsabilidad de la SEP, no del INE"],
+    c:1,
+    ex:"Aunque ambas son responsabilidad de la VCEyEC, tienen objetos distintos: la capacitación electoral es específica (dirigida a ciudadanos insaculados para fungir como funcionarios) y temporal (vinculada al proceso electoral). La educación cívica es permanente, dirigida a toda la ciudadanía —incluyendo niños, jóvenes y comunidades— y busca fortalecer la cultura democrática más allá de la jornada electoral." },
+
+  { sa:"4.1", sal:"Programas de educación cívica", area:"Educación cívica y participación ciudadana",
+    p:null, pt:null,
+    q:"¿Qué es el Programa de Educación Cívica del INE y quién lo aprueba?",
+    o:["Es un programa de estudios de secundaria aprobado por la SEP con apoyo del INE",
+       "Es el conjunto de estrategias, proyectos y acciones que el INE desarrolla de manera permanente para fomentar la cultura democrática y la participación ciudadana; es aprobado por el Consejo General del INE",
+       "Es un programa elaborado exclusivamente por los Vocales de Capacitación de cada distrito sin lineamientos centrales"],
+    c:1,
+    ex:"El Programa de Educación Cívica es aprobado por el Consejo General del INE y establece los lineamientos nacionales para las acciones de cultura democrática. Los órganos desconcentrados —a través de las Vocalías de Capacitación Electoral y Educación Cívica— implementan las acciones locales dentro de ese marco, adaptándolas a las características de cada región." },
+
+  { sa:"4.1", sal:"Programas de educación cívica", area:"Educación cívica y participación ciudadana",
+    p:null, pt:null,
+    q:"¿Cuáles son algunos de los públicos objetivo prioritarios de los programas de educación cívica del INE?",
+    o:["Exclusivamente los adultos mayores de 60 años que ya tienen experiencia electoral",
+       "Niñas, niños y jóvenes (a través de la colaboración con escuelas), nuevos ciudadanos (jóvenes que adquieren su credencial), comunidades indígenas y grupos en situación de vulnerabilidad",
+       "Solo los candidatos a puestos de elección popular y sus equipos de campaña"],
+    c:1,
+    ex:"Los programas de educación cívica del INE tienen como públicos prioritarios: niñas y niños (a través de programas como el Gobierno Escolar y el Parlamento de las Niñas y Niños), jóvenes que se incorporan al padrón, comunidades indígenas con materiales en lenguas originarias, personas con discapacidad y grupos en situación de vulnerabilidad, buscando una ciudadanía informada y participativa." },
+
+  /* ══════════════════════════════════
+     4.2  CULTURA DEMOCRÁTICA  (3)
+  ══════════════════════════════════ */
+  { sa:"4.2", sal:"Cultura democrática", area:"Educación cívica y participación ciudadana",
+    p:null, pt:null,
+    q:"¿Qué es el 'Simulacro Electoral' o 'Voto Niñas y Niños' y qué institución lo organiza?",
+    o:["Es un ejercicio interno del INE para capacitar a sus propios funcionarios, sin participación ciudadana",
+       "Es un ejercicio democrático organizado por el INE en el que niñas y niños de educación primaria y secundaria votan sobre temas de su interés, con el objetivo de iniciarlos en la cultura de la participación democrática",
+       "Es un simulacro de elecciones para adultos mayores sin credencial para votar"],
+    c:1,
+    ex:"El programa 'Voto Niñas y Niños' (o ejercicios similares según el ciclo) es organizado por el INE como parte de sus programas de educación cívica. Permite que niñas y niños experimenten el proceso de votación —desde la credencialización simbólica hasta el escrutinio— votando sobre temas que les afectan directamente, con el fin de sembrar desde temprana edad la cultura de la participación democrática." },
+
+  { sa:"4.2", sal:"Cultura democrática", area:"Educación cívica y participación ciudadana",
+    p:null, pt:null,
+    q:"¿Cuáles son los valores democráticos fundamentales que el INE promueve a través de sus programas de educación cívica?",
+    o:["Obediencia, jerarquía y disciplina como pilares del orden institucional",
+       "Libertad, igualdad, pluralismo, tolerancia, respeto a la ley y participación como valores esenciales de la democracia representativa",
+       "Competitividad electoral, financiamiento de campañas y estrategias de mercadotecnia política"],
+    c:1,
+    ex:"El INE promueve los valores democráticos fundamentales: libertad (incluida la libertad de sufragio), igualdad ante la ley y en los derechos político-electorales, pluralismo político, tolerancia a la diversidad de ideas, respeto a las normas y a los resultados electorales, y participación ciudadana activa. Estos valores se difunden a través de materiales, talleres y actividades en escuelas y comunidades." },
+
+  { sa:"4.2", sal:"Cultura democrática", area:"Educación cívica y participación ciudadana",
+    p:null, pt:null,
+    q:"¿Cómo contribuye la Vocalía de Capacitación Electoral y Educación Cívica al fortalecimiento de la democracia más allá del día de la elección?",
+    o:["No contribuye; su único papel relevante es el día de la jornada electoral",
+       "A través de sus programas permanentes de educación cívica forma ciudadanos informados, críticos y participativos que ejercen sus derechos en todas las etapas de la vida democrática, no solo al votar",
+       "Contribuye únicamente distribuyendo propaganda de los partidos políticos en las comunidades"],
+    c:1,
+    ex:"La VCEyEC cumple una función democratizadora continua: sus programas de educación cívica forman ciudadanos que conocen sus derechos y obligaciones, que participan en consultas populares, mecanismos de democracia directa y revocación de mandato, y que exigen cuentas a sus representantes. Así, la vocalía contribuye a una democracia de calidad más allá del acto de votar." },
+
+  /* ══════════════════════════════════
+     5.1  LGIPE Y REGLAMENTO DE ELECCIONES  (2)
+  ══════════════════════════════════ */
+  { sa:"5.1", sal:"LGIPE y Reglamento de Elecciones", area:"Normativa aplicable al cargo",
+    p:null, pt:null,
+    q:"¿Qué artículos de la LGIPE regulan específicamente las funciones de capacitación electoral en los órganos desconcentrados del INE?",
+    o:["Los Arts. 1 al 5, que contienen las disposiciones generales de la ley",
+       "Los Arts. 76 (atribuciones de los órganos desconcentrados en materia de capacitación), 166 al 186 (selección e integración de Mesas Directivas de Casilla) y concordantes de la LGIPE",
+       "Solo el Art. 41 CPEUM, sin desarrollo en la LGIPE"],
+    c:1,
+    ex:"La LGIPE desarrolla las atribuciones de capacitación electoral en varios artículos: el Art. 76 enumera las funciones de los Vocales de Capacitación; los Arts. 166 al 186 regulan detalladamente el proceso de insaculación, selección, capacitación e integración de las Mesas Directivas de Casilla; y otras disposiciones complementan el marco normativo aplicable a las funciones cotidianas de la vocalía." },
+
+  { sa:"5.1", sal:"LGIPE y Reglamento de Elecciones", area:"Normativa aplicable al cargo",
+    p:null, pt:null,
+    q:"¿Qué papel cumple el Reglamento de Elecciones del INE respecto de la LGIPE en materia de capacitación electoral?",
+    o:["El Reglamento de Elecciones reemplaza y deroga las disposiciones de la LGIPE sobre capacitación",
+       "El Reglamento de Elecciones desarrolla y operacionaliza las disposiciones generales de la LGIPE, estableciendo procedimientos específicos, plazos, formatos y protocolos que deben seguir la VCEyEC y los CAE en cada proceso electoral",
+       "El Reglamento de Elecciones solo aplica durante la jornada electoral y no tiene relación con la capacitación previa"],
+    c:1,
+    ex:"El Reglamento de Elecciones del INE es el instrumento normativo secundario que traduce las disposiciones generales de la LGIPE en procedimientos operativos detallados: establece los calendarios de insaculación, el número de visitas del CAE, los formatos de actas, los criterios de sustitución, los protocolos de contingencia y demás aspectos prácticos que guían el trabajo diario de la VCEyEC." },
+
+  /* ══════════════════════════════════
+     5.2  ESTATUTO DEL SPEN  (2)
+  ══════════════════════════════════ */
+  { sa:"5.2", sal:"Estatuto del SPEN", area:"Normativa aplicable al cargo",
+    p:null, pt:null,
+    q:"¿Cómo clasifica el Estatuto del SPEN al cargo de Vocal de Capacitación Electoral y Educación Cívica dentro del Servicio Profesional Electoral Nacional?",
+    o:["Como personal de mando medio sin pertenecer al SPEN",
+       "Como un cargo de la rama ejecutiva del SPEN, sujeto a las reglas de ingreso por concurso de oposición, evaluación periódica del desempeño, capacitación continua y permanencia conforme a los principios de mérito e imparcialidad",
+       "Como un cargo de libre designación política sin requisitos de ingreso"],
+    c:1,
+    ex:"El Estatuto del SPEN clasifica al Vocal de Capacitación Electoral y Educación Cívica dentro de la rama ejecutiva del Servicio Profesional Electoral Nacional. Esto implica que su ingreso se realiza mediante concurso de oposición, está sujeto a evaluaciones periódicas del desempeño, tiene acceso a programas de capacitación continua y su permanencia depende del cumplimiento de los estándares de mérito e imparcialidad establecidos por el Comité del SPEN." },
+
+  { sa:"5.2", sal:"Estatuto del SPEN", area:"Normativa aplicable al cargo",
+    p:null, pt:null,
+    q:"¿Qué obliga el Estatuto del SPEN al Vocal de Capacitación en cuanto a su conducta durante el ejercicio de sus funciones?",
+    o:["Actuar siguiendo exclusivamente las instrucciones del partido político con mayor representación en el Consejo Distrital",
+       "Actuar con imparcialidad, profesionalismo, legalidad y honradez, absteniéndose de toda conducta que pueda comprometer la objetividad de las funciones de capacitación electoral y educación cívica",
+       "Participar activamente en actividades partidistas siempre que no sean durante el horario de trabajo"],
+    c:1,
+    ex:"El Estatuto del SPEN establece que todo el personal del servicio, incluyendo los Vocales de Capacitación Electoral y Educación Cívica, debe actuar con imparcialidad, profesionalismo, legalidad, honradez y respeto a los derechos humanos. Están obligados a abstenerse de manifestaciones o conductas que puedan comprometer la objetividad de sus funciones o poner en duda la independencia del INE ante la ciudadanía y los partidos políticos." }
+
+];
+
+/* ═══════════════════════════════════════════════════
+   ALEATORIZACIÓN
+═══════════════════════════════════════════════════ */
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function shuffleOptions(q) {
+  const indices = [0, 1, 2];
+  const shuffled = shuffleArray(indices);
+  return { ...q, o: shuffled.map(i => q.o[i]), c: shuffled.indexOf(q.c) };
+}
+const SUBS = ["1.1","1.2","1.3","2.1","2.2","2.3","2.4","3.1","3.2","3.3","4.1","4.2","5.1","5.2"];
+const shuffledQ = SUBS.flatMap(sub =>
+  shuffleArray(Q.filter(q => q.sa === sub)).map(q => shuffleOptions(q))
+);
+Q.length = 0;
+shuffledQ.forEach(q => Q.push(q));
+
+/* ═══════════════════════════════════════════════════
+   ESTADO GLOBAL
+═══════════════════════════════════════════════════ */
+const TIME_LIMIT = 50 * 60;
+let answers, revealed, current, timerInterval, secondsLeft;
+
+const SS = {
+  "1.1":{bg:"#e8f5e9",color:"#1b5e20",icon:"📜"},
+  "1.2":{bg:"#f1f8e9",color:"#33691e",icon:"📋"},
+  "1.3":{bg:"#e8f5e9",color:"#2e7d32",icon:"🏗️"},
+  "2.1":{bg:"#e3f2fd",color:"#0d47a1",icon:"🎲"},
+  "2.2":{bg:"#e8eaf6",color:"#283593",icon:"🎓"},
+  "2.3":{bg:"#fff8e1",color:"#f57f17",icon:"📦"},
+  "2.4":{bg:"#fce4ec",color:"#880e4f",icon:"🔍"},
+  "3.1":{bg:"#f3e5f5",color:"#4a148c",icon:"🗳️"},
+  "3.2":{bg:"#fff3e0",color:"#e65100",icon:"🔄"},
+  "3.3":{bg:"#ffebee",color:"#b71c1c",icon:"⚠️"},
+  "4.1":{bg:"#e0f7fa",color:"#006064",icon:"📖"},
+  "4.2":{bg:"#e8f5e9",color:"#1b5e20",icon:"🏛️"},
+  "5.1":{bg:"#e3f2fd",color:"#1565c0",icon:"⚖️"},
+  "5.2":{bg:"#e8eaf6",color:"#1a237e",icon:"🎓"}
+};
+
+/* ═══════════════════════════════════════════════════
+   INICIO
+═══════════════════════════════════════════════════ */
+function startExam() {
+  answers  = new Array(Q.length).fill(null);
+  revealed = new Array(Q.length).fill(false);
+  current  = 0;
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('navBar').classList.remove('hidden');
+  renderQuestion(0);
+  startTimer();
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+function renderQuestion(idx) {
+  current = idx;
+  const q = Q[idx], sc = SS[q.sa] || {bg:"#e8f5e9",color:"#1b5e20",icon:"📌"};
+  const isR = revealed[idx], sel = answers[idx];
+
+  let ph = '';
+  if (q.p) ph = `<div class="passage"><div class="passage-label">📄 ${q.pt}</div>${q.p.replace(/\n/g,'<br>')}</div>`;
+
+  const L = ['A','B','C'];
+  const opts = q.o.map((o, i) => {
+    let cls = 'option', icon = '';
+    if (isR) {
+      cls += ' disabled';
+      if (i === q.c) { cls += ' correct'; icon = '<span class="opt-icon">✅</span>'; }
+      else if (i === sel && i !== q.c) { cls += ' incorrect'; icon = '<span class="opt-icon">❌</span>'; }
+    } else if (i === sel) cls += ' selected';
+    return `<div class="${cls}" onclick="selOpt(${idx},${i})">
+      <div class="option-letter">${L[i]}</div>
+      <div class="opt-text">${o}</div>${icon}
+    </div>`;
+  }).join('');
+
+  const ri = isR ? (sel === q.c ? '✅ Correcto' : sel === null ? '⏭️ Sin responder' : '❌ Incorrecto') : '';
+
+  document.getElementById('examScreen').innerHTML = `
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-badge" style="background:${sc.bg};color:${sc.color}">${sc.icon} ${q.sal}</span>
+        <span class="q-num">${idx+1}/${Q.length}</span>
+      </div>
+      ${ph}
+      <div class="question-text">${q.q}</div>
+      <div class="options">${opts}</div>
+      <div class="explanation ${isR ? 'show' : ''}"><strong>${ri}${ri ? ' — ' : ''}Explicación:</strong> ${q.ex}</div>
+    </div>
+    ${!isR && answers[idx] !== null
+      ? `<div class="ver-sol-wrap"><button class="btn-ver-sol" onclick="rev(${idx})">Ver explicación 💡</button></div>`
+      : ''}
+  `;
+
+  document.getElementById('progressBar').style.width = ((idx+1)/Q.length*100) + '%';
+  document.getElementById('navCurrent').textContent = idx + 1;
+  document.getElementById('navTotal').textContent   = Q.length;
+  document.getElementById('btnPrev').disabled = idx === 0;
+  document.getElementById('btnNext').textContent = idx === Q.length-1 ? '🏁 Finalizar' : 'Sig. →';
+  window.scrollTo({top: 0, behavior: 'instant'});
+}
+
+function selOpt(qi, oi) { if (revealed[qi]) return; answers[qi] = oi; renderQuestion(qi); }
+function rev(idx) { revealed[idx] = true; renderQuestion(idx); }
+function nextQ() { if (current < Q.length-1) renderQuestion(current+1); else showResults(); }
+function prevQ() { if (current > 0) renderQuestion(current-1); }
+
+/* ═══════════════════════════════════════════════════
+   TIMER
+═══════════════════════════════════════════════════ */
+function startTimer() {
+  secondsLeft = TIME_LIMIT;
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    const m = Math.floor(secondsLeft/60).toString().padStart(2,'0');
+    const s = (secondsLeft%60).toString().padStart(2,'0');
+    const el = document.getElementById('timer');
+    el.textContent = `${m}:${s}`;
+    el.className = 'timer' + (secondsLeft < 300 ? ' danger' : secondsLeft < 600 ? ' warning' : '');
+    if (secondsLeft <= 0) { clearInterval(timerInterval); showResults(); }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════
+   RESULTADOS
+═══════════════════════════════════════════════════ */
+function showResults() {
+  clearInterval(timerInterval);
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('navBar').classList.add('hidden');
+
+  const total    = Q.length;
+  const answered = answers.filter(a => a !== null).length;
+  const correct  = answers.filter((a, i) => a === Q[i].c).length;
+  const wrong    = answered - correct;
+  const skipped  = total - answered;
+  const pct      = Math.round(correct / total * 100);
+
+  const areas = {};
+  Q.forEach((q, i) => {
+    if (!areas[q.area]) areas[q.area] = {total:0, correct:0};
+    areas[q.area].total++;
+    if (answers[i] === q.c) areas[q.area].correct++;
+  });
+
+  const subs = {};
+  Q.forEach((q, i) => {
+    if (!subs[q.sa]) subs[q.sa] = {label:q.sal, total:0, correct:0};
+    subs[q.sa].total++;
+    if (answers[i] === q.c) subs[q.sa].correct++;
+  });
+
+  const weak = Object.entries(subs).filter(([,s]) => s.correct/s.total < 0.6).map(([,s]) => s.label);
+  const cc   = pct >= 70 ? 'score-good' : pct >= 50 ? 'score-mid' : 'score-low';
+  const msg  = pct >= 80 ? '¡Excelente! Dominas los conocimientos técnicos de la VCEyEC.'
+             : pct >= 60 ? 'Buen avance. Refuerza los temas operativos señalados.'
+             : 'Diagnóstico listo. Enfócate en las áreas marcadas antes del examen.';
+
+  const areaColors = {
+    "Marco normativo e institucional":       "#1b5e20",
+    "Capacitación electoral":                "#0d47a1",
+    "Jornada electoral — funciones del vocal":"#4a148c",
+    "Educación cívica y participación ciudadana":"#006064",
+    "Normativa aplicable al cargo":          "#1a237e"
+  };
+
+  const rows = Object.entries(areas).map(([name, a]) => {
+    const p    = Math.round(a.correct / a.total * 100);
+    const icon = p >= 80 ? '✅' : p >= 60 ? '⚠️' : '❌';
+    const bc   = p >= 60
+      ? `linear-gradient(90deg,${areaColors[name]||'#1b5e20'},#43a047)`
+      : 'linear-gradient(90deg,#c62828,#ef5350)';
+    return `<div class="area-row">
+      <div class="area-name">${icon} ${name}</div>
+      <div class="area-bar-wrap"><div class="area-bar" style="width:${p}%;background:${bc}"></div></div>
+      <div class="area-pct" style="color:${p>=60?'#1b5e20':'#c62828'}">${p}%</div>
+    </div>`;
+  }).join('');
+
+  const wb = weak.length
+    ? `<div class="weak-banner"><h4>🎯 Estudia esto primero:</h4><p>Menos del 60% en estas subáreas. Son clave para el cargo.</p><div class="weak-tags">${weak.map(t=>`<span class="weak-tag">📌 ${t}</span>`).join('')}</div></div>`
+    : `<div style="background:#e8f5e9;border-radius:10px;padding:13px;margin:13px 0;color:#1b5e20;font-weight:600">✅ ¡Dominas todas las áreas técnicas del cargo!</div>`;
+
+  const tu = TIME_LIMIT - secondsLeft;
+  const tm = Math.floor(tu/60), ts = tu%60;
+
+  document.getElementById('resultsScreen').innerHTML = `
+    <div class="results-screen">
+      <div style="background:#e8f5e9;border-radius:10px;padding:9px 14px;margin-bottom:16px;font-size:.8rem;color:#1b5e20;font-weight:600">
+        📋 DIAGNÓSTICO VCEyEC — ${new Date().toLocaleDateString('es-MX')}
+      </div>
+      <div class="score-circle ${cc}">${pct}%<div class="score-sub">${correct}/${total}</div></div>
+      <h2 style="margin-bottom:7px">${msg}</h2>
+      <p style="margin-bottom:18px;color:#777;font-size:.83rem">Tiempo: ${tm}m ${ts}s · Respondidas: ${answered}/${total}</p>
+      <div class="stats-grid">
+        <div class="stat-card stat-correct"><div class="n">${correct}</div><div class="l">✅ Correctas</div></div>
+        <div class="stat-card stat-wrong"><div class="n">${wrong}</div><div class="l">❌ Incorrectas</div></div>
+        <div class="stat-card stat-skip"><div class="n">${skipped}</div><div class="l">⏭️ Saltadas</div></div>
+      </div>
+      ${wb}
+      <div style="text-align:left;margin-bottom:22px">
+        <h3 style="font-size:.87rem;font-weight:700;color:#444;margin-bottom:9px">Desempeño por área</h3>
+        ${rows}
+      </div>
+      <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary btn-lg" onclick="reviewExam()">Revisar con explicaciones</button>
+        <button class="btn btn-secondary btn-lg" onclick="location.reload()">🔀 Nuevo diagnóstico</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('navBar').classList.remove('hidden');
+  revealed = revealed.map(() => true);
+  renderQuestion(0);
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
